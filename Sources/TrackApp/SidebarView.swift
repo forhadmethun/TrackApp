@@ -3,8 +3,10 @@ import AppKit
 
 struct SidebarView: View {
     @ObservedObject var tracker: UsageTracker
-    @State private var isCollapsed = false
+    @ObservedObject var state: SidebarState
     @State private var refreshTick = Date()
+
+    private var isCollapsed: Bool { state.isCollapsed }
 
     private let timer = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
 
@@ -41,7 +43,7 @@ struct SidebarView: View {
             }
             .padding(14)
         }
-        .frame(width: isCollapsed ? 72 : 272, height: isCollapsed ? 72 : 408)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
         .animation(.spring(response: 0.45, dampingFraction: 0.82), value: isCollapsed)
         .onReceive(timer) { refreshTick = $0 }
     }
@@ -82,7 +84,7 @@ struct SidebarView: View {
 
             Button {
                 withAnimation(.spring(response: 0.5, dampingFraction: 0.8)) {
-                    isCollapsed.toggle()
+                    state.isCollapsed.toggle()
                 }
             } label: {
                 Image(systemName: isCollapsed ? "chevron.left.2" : "chevron.right.2")
