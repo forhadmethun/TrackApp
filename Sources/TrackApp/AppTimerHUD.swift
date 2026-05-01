@@ -126,7 +126,7 @@ final class AppTimerHUDController {
                 // Top-right of the active window: pill's right edge sits `edgeInset`
                 // inside the window's right edge.
                 let x = win.maxX - pillW - edgeInset
-                let topY = win.maxY - 6
+                let topY = win.maxY - win.height * 0.25
                 let y = topY - pillH
                 return NSRect(x: x, y: y, width: pillW, height: pillH)
             }
