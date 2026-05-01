@@ -15,6 +15,7 @@ final class UsageTracker: ObservableObject {
     }
 
     @Published private(set) var usages: [String: AppUsage] = [:]
+    @Published private(set) var currentBundleID: String?
     private var lastApp: String?
     private var lastTimestamp: Date = Date()
 
@@ -37,8 +38,10 @@ final class UsageTracker: ObservableObject {
                 )
             }
             lastApp = bundleID
+            if currentBundleID != bundleID { currentBundleID = bundleID }
         } else {
             lastApp = nil
+            if currentBundleID != nil { currentBundleID = nil }
         }
         lastTimestamp = now
     }
@@ -54,6 +57,12 @@ final class UsageTracker: ObservableObject {
     func reset() {
         usages = [:]
         lastApp = nil
+        currentBundleID = nil
         lastTimestamp = Date()
+    }
+
+    var currentUsage: AppUsage? {
+        guard let id = currentBundleID else { return nil }
+        return usages[id]
     }
 }
