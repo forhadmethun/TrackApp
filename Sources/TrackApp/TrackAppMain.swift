@@ -18,6 +18,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     let monitor = ActivityMonitor()
     let tracker = UsageTracker()
     let panelController = FloatingPanelController()
+    let hudController = AppTimerHUDController()
     var statusItem: NSStatusItem?
     var tickTimer: Timer?
 
@@ -36,6 +37,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         }
 
         panelController.show(tracker: tracker)
+        hudController.show(tracker: tracker)
         setupStatusBar()
     }
 
@@ -52,6 +54,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         toggleItem.target = self
         menu.addItem(toggleItem)
 
+        let toggleHUD = NSMenuItem(title: "Show / Hide App Timer", action: #selector(toggleHUDAction), keyEquivalent: "t")
+        toggleHUD.target = self
+        menu.addItem(toggleHUD)
+
         let resetItem = NSMenuItem(title: "Reset Today's Stats", action: #selector(resetStats), keyEquivalent: "r")
         resetItem.target = self
         menu.addItem(resetItem)
@@ -63,6 +69,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     @objc func toggleSidebar() {
         panelController.toggleVisibility()
+    }
+
+    @objc func toggleHUDAction() {
+        hudController.toggleVisibility()
     }
 
     @objc func resetStats() {
