@@ -112,18 +112,25 @@ final class AppTimerHUDController {
         let pillW = panel.frame.width
         let pillH = panel.frame.height
 
+        let edgeInset: CGFloat = 12
         let newFrame: NSRect = {
             if let win = WindowFinder.frontWindowFrame(forBundleID: bundleID) {
-                let x = win.midX - pillW / 2
-                // Pill top edge sits 6pt below window top edge (inside the title-bar zone).
+                // Top-right of the active window: pill's right edge sits `edgeInset`
+                // inside the window's right edge.
+                let x = win.maxX - pillW - edgeInset
                 let topY = win.maxY - 6
                 let y = topY - pillH
                 return NSRect(x: x, y: y, width: pillW, height: pillH)
             }
-            // Fallback: top-center of main screen, just below menu bar.
+            // Fallback: top-right of main screen, just below the menu bar.
             if let screen = NSScreen.main {
                 let vf = screen.visibleFrame
-                return NSRect(x: vf.midX - pillW / 2, y: vf.maxY - pillH - 6, width: pillW, height: pillH)
+                return NSRect(
+                    x: vf.maxX - pillW - edgeInset,
+                    y: vf.maxY - pillH - 6,
+                    width: pillW,
+                    height: pillH
+                )
             }
             return NSRect(x: 200, y: 800, width: pillW, height: pillH)
         }()
