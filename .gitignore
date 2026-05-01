@@ -1,0 +1,19 @@
+## Build artifacts
+.build/
+.swiftpm/
+Package.resolved
+TrackApp.app/
+DerivedData/
+
+## Xcode
+*.xcodeproj/
+*.xcworkspace/
+xcuserdata/
+
+## macOS
+.DS_Store
+*.swp
+
+## Editor
+.vscode/
+.idea/
