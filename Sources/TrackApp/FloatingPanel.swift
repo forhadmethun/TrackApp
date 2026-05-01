@@ -16,8 +16,8 @@ final class FloatingPanelController {
     private let expandedSize = NSSize(width: 272, height: 408)
     private let collapsedSize = NSSize(width: 72, height: 72)
 
-    func show(tracker: UsageTracker) {
-        let view = SidebarView(tracker: tracker, state: state)
+    func show(tracker: UsageTracker, hudState: HUDState) {
+        let view = SidebarView(tracker: tracker, state: state, hudState: hudState)
         let hosting = NSHostingView(rootView: view)
         hosting.translatesAutoresizingMaskIntoConstraints = false
 

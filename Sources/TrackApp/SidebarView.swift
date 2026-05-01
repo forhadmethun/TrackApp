@@ -4,6 +4,7 @@ import AppKit
 struct SidebarView: View {
     @ObservedObject var tracker: UsageTracker
     @ObservedObject var state: SidebarState
+    @ObservedObject var hudState: HUDState
     @State private var refreshTick = Date()
 
     private var isCollapsed: Bool { state.isCollapsed }
@@ -105,11 +106,16 @@ struct SidebarView: View {
                     emptyState
                 } else {
                     ForEach(Array(tracker.sortedTopApps.prefix(10))) { app in
-                        AppRow(usage: app, total: max(tracker.totalSeconds, 1))
-                            .transition(.asymmetric(
-                                insertion: .opacity.combined(with: .move(edge: .top)),
-                                removal: .opacity
-                            ))
+                        AppRow(
+                            usage: app,
+                            total: max(tracker.totalSeconds, 1),
+                            showRevealTimer: !hudState.isVisible,
+                            onRevealTimer: { hudState.isVisible = true }
+                        )
+                        .transition(.asymmetric(
+                            insertion: .opacity.combined(with: .move(edge: .top)),
+                            removal: .opacity
+                        ))
                     }
                 }
             }
@@ -182,6 +188,8 @@ struct PulsingDot: View {
 struct AppRow: View {
     let usage: UsageTracker.AppUsage
     let total: TimeInterval
+    var showRevealTimer: Bool = false
+    var onRevealTimer: () -> Void = {}
     @State private var hovered = false
 
     private var fraction: Double {
@@ -239,7 +247,26 @@ struct AppRow: View {
                     Capsule().fill(.white.opacity(0.1))
                 )
                 .overlay(Capsule().strokeBorder(.white.opacity(0.08), lineWidth: 0.5))
+            if showRevealTimer {
+                Button(action: onRevealTimer) {
+                    Image(systemName: "timer")
+                        .font(.system(size: 11, weight: .bold))
+                        .foregroundStyle(
+                            LinearGradient(
+                                colors: [.purple, .pink],
+                                startPoint: .top, endPoint: .bottom
+                            )
+                        )
+                        .frame(width: 22, height: 22)
+                        .background(.white.opacity(hovered ? 0.16 : 0.08), in: Circle())
+                        .overlay(Circle().strokeBorder(.white.opacity(0.12), lineWidth: 0.5))
+                }
+                .buttonStyle(.plain)
+                .help("Reopen floating timer")
+                .transition(.opacity.combined(with: .scale(scale: 0.8)))
+            }
         }
+        .animation(.spring(response: 0.35, dampingFraction: 0.8), value: showRevealTimer)
         .padding(.horizontal, 8)
         .padding(.vertical, 7)
         .background(

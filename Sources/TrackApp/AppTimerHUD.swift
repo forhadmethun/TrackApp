@@ -5,27 +5,25 @@ import Combine
 @MainActor
 final class HUDState: ObservableObject {
     @Published var isCollapsed = false
+    @Published var isVisible = true
 }
 
 @MainActor
 final class AppTimerHUDController {
     private var panel: NSPanel?
     private var cancellables = Set<AnyCancellable>()
-    private let state = HUDState()
+    private var state: HUDState!
     private var tracker: UsageTracker?
     private var manualOverrideForBundleID: String?
 
     private let expandedSize = NSSize(width: 280, height: 44)
     private let collapsedSize = NSSize(width: 110, height: 36)
 
-    func show(tracker: UsageTracker) {
+    func show(tracker: UsageTracker, state: HUDState) {
         self.tracker = tracker
+        self.state = state
 
-        let view = AppTimerHUDView(
-            tracker: tracker,
-            state: state,
-            onClose: { [weak self] in self?.hide() }
-        )
+        let view = AppTimerHUDView(tracker: tracker, state: state)
         let hosting = NSHostingView(rootView: view)
 
         let panel = HUDPanel(
@@ -80,22 +78,24 @@ final class AppTimerHUDController {
             }
         }
 
+        // Show / hide the panel reactively based on shared state.
+        state.$isVisible
+            .removeDuplicates()
+            .sink { [weak self] visible in
+                guard let self, let panel = self.panel else { return }
+                if visible {
+                    // Re-snap to active window every time it returns.
+                    self.dockToActiveWindow(forBundleID: self.tracker?.currentBundleID)
+                    panel.orderFrontRegardless()
+                } else {
+                    panel.orderOut(nil)
+                }
+            }
+            .store(in: &cancellables)
+
         applySize(collapsed: state.isCollapsed)
         dockToActiveWindow(forBundleID: tracker.currentBundleID)
-        panel.orderFrontRegardless()
-    }
-
-    func toggleVisibility() {
-        guard let panel else { return }
-        if panel.isVisible {
-            hide()
-        } else {
-            panel.orderFrontRegardless()
-        }
-    }
-
-    func hide() {
-        panel?.orderOut(nil)
+        if state.isVisible { panel.orderFrontRegardless() }
     }
 
     private func applySize(collapsed: Bool) {
@@ -166,7 +166,6 @@ final class HUDPanel: NSPanel {
 struct AppTimerHUDView: View {
     @ObservedObject var tracker: UsageTracker
     @ObservedObject var state: HUDState
-    var onClose: () -> Void = {}
     @State private var refreshTick = Date()
     @State private var hovered = false
 
@@ -302,7 +301,9 @@ struct AppTimerHUDView: View {
     }
 
     private var closeButton: some View {
-        Button(action: onClose) {
+        Button {
+            state.isVisible = false
+        } label: {
             Image(systemName: "xmark")
                 .font(.system(size: 9, weight: .bold))
                 .foregroundStyle(.secondary)
@@ -310,7 +311,7 @@ struct AppTimerHUDView: View {
                 .background(.white.opacity(hovered ? 0.18 : 0.06), in: Circle())
         }
         .buttonStyle(.plain)
-        .help("Hide timer (re-open from menu bar)")
+        .help("Hide timer (re-open from sidebar or menu bar)")
     }
 
     private func formatTime(_ seconds: TimeInterval) -> String {
