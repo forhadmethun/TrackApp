@@ -5,6 +5,7 @@ struct SidebarView: View {
     @ObservedObject var tracker: UsageTracker
     @ObservedObject var state: SidebarState
     @ObservedObject var hudState: HUDState
+    var onClose: () -> Void = {}
     @State private var refreshTick = Date()
 
     private var isCollapsed: Bool { state.isCollapsed }
@@ -83,6 +84,19 @@ struct SidebarView: View {
                 Spacer(minLength: 0)
             }
 
+            if !isCollapsed {
+                Button(action: onClose) {
+                    Image(systemName: "xmark")
+                        .font(.system(size: 10, weight: .bold))
+                        .foregroundStyle(.secondary)
+                        .frame(width: 24, height: 24)
+                        .background(.white.opacity(0.08), in: Circle())
+                        .overlay(Circle().strokeBorder(.white.opacity(0.1), lineWidth: 0.5))
+                }
+                .buttonStyle(.plain)
+                .help("Hide sidebar")
+            }
+
             Button {
                 withAnimation(.spring(response: 0.5, dampingFraction: 0.8)) {
                     state.isCollapsed.toggle()
@@ -96,6 +110,7 @@ struct SidebarView: View {
                     .overlay(Circle().strokeBorder(.white.opacity(0.1), lineWidth: 0.5))
             }
             .buttonStyle(.plain)
+            .help(isCollapsed ? "Expand" : "Collapse")
         }
     }
 
