@@ -41,7 +41,7 @@ struct SidebarView: View {
             }
             .padding(14)
         }
-        .frame(width: isCollapsed ? 84 : 320, height: isCollapsed ? 84 : 480)
+        .frame(width: isCollapsed ? 72 : 272, height: isCollapsed ? 72 : 408)
         .animation(.spring(response: 0.45, dampingFraction: 0.82), value: isCollapsed)
         .onReceive(timer) { refreshTick = $0 }
     }

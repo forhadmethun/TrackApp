@@ -10,16 +10,25 @@ final class FloatingPanelController {
         let hosting = NSHostingView(rootView: view)
         hosting.translatesAutoresizingMaskIntoConstraints = false
 
+        let panelSize = NSSize(width: 272, height: 408)
         let savedFrame: NSRect = {
             if let saved = UserDefaults.standard.string(forKey: "panelFrame") {
                 let r = NSRectFromString(saved)
-                if r.width > 50 && r.height > 50 { return r }
+                if r.width > 50 && r.height > 50 {
+                    // Reuse stored origin but force the current panel size.
+                    return NSRect(origin: r.origin, size: panelSize)
+                }
             }
             if let screen = NSScreen.main {
                 let vf = screen.visibleFrame
-                return NSRect(x: vf.maxX - 360, y: vf.maxY - 540, width: 320, height: 480)
+                return NSRect(
+                    x: vf.maxX - panelSize.width - 16,
+                    y: vf.maxY - panelSize.height - 16,
+                    width: panelSize.width,
+                    height: panelSize.height
+                )
             }
-            return NSRect(x: 100, y: 100, width: 320, height: 480)
+            return NSRect(x: 100, y: 100, width: panelSize.width, height: panelSize.height)
         }()
 
         let panel = DraggablePanel(
