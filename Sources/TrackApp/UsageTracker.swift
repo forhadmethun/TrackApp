@@ -54,6 +54,11 @@ final class UsageTracker: ObservableObject {
         usages.values.reduce(0) { $0 + $1.seconds }
     }
 
+    /// Seed an entry from persisted storage without disturbing the live-tick state.
+    func restore(bundleID: String, name: String, icon: NSImage?, seconds: TimeInterval) {
+        usages[bundleID] = AppUsage(id: bundleID, name: name, icon: icon, seconds: seconds)
+    }
+
     func reset() {
         usages = [:]
         lastApp = nil
