@@ -21,7 +21,11 @@ final class AppTimerHUDController {
     func show(tracker: UsageTracker) {
         self.tracker = tracker
 
-        let view = AppTimerHUDView(tracker: tracker, state: state)
+        let view = AppTimerHUDView(
+            tracker: tracker,
+            state: state,
+            onClose: { [weak self] in self?.hide() }
+        )
         let hosting = NSHostingView(rootView: view)
 
         let panel = HUDPanel(
@@ -84,10 +88,14 @@ final class AppTimerHUDController {
     func toggleVisibility() {
         guard let panel else { return }
         if panel.isVisible {
-            panel.orderOut(nil)
+            hide()
         } else {
             panel.orderFrontRegardless()
         }
+    }
+
+    func hide() {
+        panel?.orderOut(nil)
     }
 
     private func applySize(collapsed: Bool) {
@@ -158,6 +166,7 @@ final class HUDPanel: NSPanel {
 struct AppTimerHUDView: View {
     @ObservedObject var tracker: UsageTracker
     @ObservedObject var state: HUDState
+    var onClose: () -> Void = {}
     @State private var refreshTick = Date()
     @State private var hovered = false
 
@@ -224,6 +233,9 @@ struct AppTimerHUDView: View {
                     PulsingDot()
                 }
 
+                if !state.isCollapsed {
+                    closeButton
+                }
                 collapseButton
             }
             .id(usage.id + (state.isCollapsed ? "_c" : "_e"))
@@ -240,6 +252,7 @@ struct AppTimerHUDView: View {
                         .font(.system(.callout, design: .rounded, weight: .medium))
                         .foregroundStyle(.secondary)
                     Spacer(minLength: 0)
+                    closeButton
                 }
                 collapseButton
             }
@@ -285,6 +298,19 @@ struct AppTimerHUDView: View {
                 .background(.white.opacity(hovered ? 0.12 : 0.06), in: Circle())
         }
         .buttonStyle(.plain)
+        .help(state.isCollapsed ? "Expand" : "Collapse")
+    }
+
+    private var closeButton: some View {
+        Button(action: onClose) {
+            Image(systemName: "xmark")
+                .font(.system(size: 9, weight: .bold))
+                .foregroundStyle(.secondary)
+                .frame(width: 18, height: 18)
+                .background(.white.opacity(hovered ? 0.18 : 0.06), in: Circle())
+        }
+        .buttonStyle(.plain)
+        .help("Hide timer (re-open from menu bar)")
     }
 
     private func formatTime(_ seconds: TimeInterval) -> String {
